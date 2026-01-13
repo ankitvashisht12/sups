@@ -1,6 +1,6 @@
 # SUPS - Engineering Work Journal
 
-**SUPS** (Stand-Up) is an engineering work journal and intelligence platform that starts with Slack stand-ups and grows into a comprehensive record of your professional journey.
+**SUPS** (Stand-Ups) is an engineering work journal and intelligence platform that starts with Slack stand-ups and grows into a comprehensive record of your professional journey.
 
 **Today**: Automated stand-up reminders and organized updates via Slack.
 
