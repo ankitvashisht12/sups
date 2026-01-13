@@ -59,11 +59,12 @@ sups/
 ## Documentation
 
 - [Vision](docs/VISION.md) - Product vision and long-term roadmap
+- [Product Spec](docs/PRODUCT.md) - User flows, commands, and interactions
 - [Tech Stack](docs/TECH_STACK.md) - Technology stack and dependencies
+- [Architecture](docs/ARCHITECTURE.md) - System architecture and design decisions
 - [Setup Guide](docs/SETUP.md) - Initial setup and configuration
 - [Deployment Guide](docs/DEPLOYMENT.md) - How to deploy the app
 - [Development Plan](docs/DEVELOPMENT_PLAN.md) - Roadmap and development phases
-- [Architecture](docs/ARCHITECTURE.md) - System architecture and design decisions
 
 ## Contributing
 
