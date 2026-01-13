@@ -7,3 +7,8 @@ export {
   handleAppUninstalled,
   handleTokensRevoked,
 } from './oauth-handler.js';
+export {
+  buildHomeView,
+  handleAppHomeOpened,
+  handleSaveConfig,
+} from './home-handler.js';

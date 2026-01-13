@@ -7,6 +7,8 @@ import {
   storeInstallation,
   fetchInstallation,
   deleteInstallation,
+  handleAppHomeOpened,
+  handleSaveConfig,
 } from './handlers/index.js';
 import {
   getWorkspacesToRemind,
@@ -62,6 +64,18 @@ app.event('message', async (args) => {
 });
 
 app.event('app_mention', handleAppMention);
+
+// Handle App Home tab
+app.event('app_home_opened', handleAppHomeOpened);
+
+// Handle save config action from App Home
+app.action('save_config', handleSaveConfig);
+
+// Acknowledge intermediate block actions (selection changes don't need processing until save)
+app.action('channel_select', async ({ ack }) => ack());
+app.action('reminder_time_select', async ({ ack }) => ack());
+app.action('deadline_time_select', async ({ ack }) => ack());
+app.action('timezone_select', async ({ ack }) => ack());
 
 // Handle app uninstall
 app.event('app_uninstalled', async ({ context }) => {
