@@ -90,7 +90,7 @@ This project is open source and welcomes contributions! Please read our contribu
 
 ## License
 
-[To be determined - MIT/Apache/etc.]
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## Author
 
