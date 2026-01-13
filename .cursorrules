@@ -1,0 +1,265 @@
+# SUPS - Cursor Rules
+
+## Project Overview
+
+SUPS (Stand-Up Integration for Slack) is a Slack app that automates stand-up reminders and organizes stand-up submissions for engineering teams. The project uses Node.js 22, Fastify, Slack Bolt framework, Supabase (PostgreSQL), and Drizzle ORM.
+
+## Tech Stack
+
+- **Runtime**: Node.js 22 (LTS)
+- **Framework**: Fastify (not Express)
+- **Slack SDK**: @slack/bolt with custom Fastify receiver
+- **Database**: Supabase (PostgreSQL)
+- **ORM**: Drizzle ORM
+- **Hosting**: Render
+- **Scheduling**: External cron (cron-job.org)
+- **Local Dev**: ngrok for tunneling
+
+## Code Style & Conventions
+
+### General
+- Use modern JavaScript/TypeScript features (ES2022+)
+- Prefer async/await over callbacks
+- Use const/let, avoid var
+- Use meaningful variable and function names
+- Keep functions small and focused (single responsibility)
+- Add JSDoc comments for public functions and complex logic
+
+### Formatting
+- Use 2 spaces for indentation
+- Use single quotes for strings (unless double quotes are needed)
+- Use semicolons
+- Maximum line length: 100 characters
+- Trailing commas in multi-line objects/arrays
+
+### Error Handling
+- Always handle errors explicitly
+- Use try-catch blocks for async operations
+- Return meaningful error messages to users
+- Log errors with context for debugging
+- Never expose internal error details to Slack users
+
+### Slack-Specific
+- Always verify Slack request signatures
+- Use Block Kit for UI components (modals, messages)
+- Keep Slack messages concise and user-friendly
+- Handle Slack API rate limits gracefully
+- Use Slack user IDs, not usernames (usernames can change)
+
+## Architecture Patterns
+
+### Project Structure
+```
+sups/
+├── backend/          # Backend API and services
+│   ├── src/
+│   │   ├── handlers/      # Slack event handlers
+│   │   ├── services/      # Business logic
+│   │   ├── models/        # Database models (Drizzle schemas)
+│   │   ├── utils/         # Utility functions
+│   │   └── app.js         # Main Fastify app
+│   ├── migrations/        # Drizzle migrations
+│   └── tests/            # Test files
+├── slack-app/        # Slack app configuration
+│   ├── config/           # Slack app configuration
+│   ├── blocks/           # Block Kit UI components
+│   ├── modals/           # Modal definitions
+│   └── messages/         # Message templates
+└── docs/             # Documentation
+```
+
+### Fastify Patterns
+- Use Fastify plugins for modular organization
+- Register routes as plugins
+- Use Fastify's built-in validation (JSON schema)
+- Leverage Fastify's lifecycle hooks when needed
+- Use Fastify's logger instead of console.log
+
+### Slack Bolt Patterns
+- Use Bolt's custom receiver pattern with Fastify
+- Organize handlers by event type (app_mention, commands, etc.)
+- Use Bolt's built-in middleware for common tasks
+- Handle OAuth flow properly
+- Use Bolt's error handling utilities
+
+### Database Patterns (Drizzle)
+- Define schemas in `backend/src/models/`
+- Use migrations for schema changes (never modify schema directly)
+- Use parameterized queries (Drizzle handles this)
+- Always handle database errors gracefully
+- Use transactions for multi-step operations
+- Index frequently queried columns
+
+### Service Layer
+- Keep business logic in services, not handlers
+- Services should be pure functions when possible
+- Services handle database operations
+- Handlers call services and format Slack responses
+- One service per domain (StandupService, ReminderService, etc.)
+
+## File Naming Conventions
+
+- **Handlers**: `event-name-handler.js` (e.g., `app-mention-handler.js`)
+- **Services**: `service-name-service.js` (e.g., `standup-service.js`)
+- **Models**: `model-name.js` (e.g., `standup.js`)
+- **Utils**: `utility-name.js` (e.g., `slack-utils.js`)
+- **Tests**: `*.test.js` or `*.spec.js`
+
+## Code Organization
+
+### Handlers
+- Keep handlers thin - they should only:
+  - Parse incoming Slack events
+  - Call appropriate services
+  - Format and send Slack responses
+  - Handle Slack-specific errors
+
+### Services
+- Services contain business logic
+- Services interact with the database
+- Services are testable independently
+- Services return plain JavaScript objects (not Slack-specific formats)
+
+### Models
+- Use Drizzle schema definitions
+- Export schemas and types
+- Keep schema definitions close to related services
+
+## Environment Variables
+
+Always use environment variables for:
+- Slack tokens and secrets
+- Database connection strings
+- API keys
+- Configuration values
+
+Never commit `.env` files. Use `.env.example` for documentation.
+
+## Testing
+
+- Write tests for services and utilities
+- Mock Slack API calls in tests
+- Use test database for integration tests
+- Test error cases, not just happy paths
+- Keep tests fast and isolated
+
+## Security
+
+- Always verify Slack request signatures
+- Use parameterized queries (Drizzle handles this)
+- Never log sensitive data (tokens, secrets)
+- Validate all user inputs
+- Use HTTPS in production
+- Implement rate limiting on public endpoints
+
+## Performance
+
+- Use database indexes appropriately
+- Cache frequently accessed data when beneficial
+- Avoid N+1 queries
+- Use pagination for large result sets
+- Optimize Slack API calls (batch when possible)
+
+## Documentation
+
+- Update README.md when adding features
+- Document complex logic with comments
+- Keep architecture docs up to date
+- Document API endpoints
+- Include examples in documentation
+
+## Common Patterns
+
+### Slack Event Handler Example
+```javascript
+// handlers/app-mention-handler.js
+async function handleAppMention({ event, client }) {
+  try {
+    const result = await standupService.processMention(event);
+    await client.chat.postMessage({
+      channel: event.channel,
+      text: result.message,
+    });
+  } catch (error) {
+    logger.error('App mention handler error', { error, event });
+    await client.chat.postEphemeral({
+      channel: event.channel,
+      user: event.user,
+      text: 'Sorry, something went wrong. Please try again.',
+    });
+  }
+}
+```
+
+### Service Example
+```javascript
+// services/standup-service.js
+async function submitStandup(teamId, userId, content) {
+  const standup = await db.insert(standups)
+    .values({
+      teamId,
+      userId,
+      content,
+      date: new Date(),
+    })
+    .returning();
+  
+  return standup[0];
+}
+```
+
+### Drizzle Schema Example
+```javascript
+// models/standup.js
+import { pgTable, uuid, text, timestamp, date } from 'drizzle-orm/pg-core';
+
+export const standups = pgTable('standups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  teamId: uuid('team_id').notNull().references(() => teams.id),
+  userId: text('user_id').notNull(),
+  content: text('content').notNull(),
+  date: date('date').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+```
+
+## When Adding New Features
+
+1. **Plan**: Check architecture docs and existing patterns
+2. **Schema**: Create migration if database changes needed
+3. **Service**: Add business logic to appropriate service
+4. **Handler**: Create handler for Slack interaction
+5. **Test**: Write tests for new functionality
+6. **Document**: Update relevant documentation
+7. **Deploy**: Follow deployment guide
+
+## Avoid
+
+- Don't use Express patterns (this is Fastify)
+- Don't mix business logic in handlers
+- Don't hardcode configuration values
+- Don't ignore errors
+- Don't expose internal errors to users
+- Don't skip request signature verification
+- Don't commit secrets or tokens
+- Don't create circular dependencies
+
+## Preferred Libraries
+
+- **HTTP**: Fastify (built-in)
+- **Database**: Drizzle ORM
+- **Slack**: @slack/bolt
+- **Logging**: Fastify logger or pino
+- **Validation**: Fastify JSON schema or zod
+- **Testing**: Jest or Node.js test runner
+
+## Questions to Consider
+
+When implementing features, ask:
+- Is this following the service/handler separation?
+- Are errors handled gracefully?
+- Is the Slack response user-friendly?
+- Is the database query optimized?
+- Are environment variables used for config?
+- Is the code testable?
+- Does it follow existing patterns in the codebase?
