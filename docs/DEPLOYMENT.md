@@ -1,259 +1,232 @@
 # Deployment Guide - SUPS
 
-This guide covers deploying the SUPS Slack integration app to production.
+This guide covers deploying SUPS to production.
+
+For tech stack details, see [TECH_STACK.md](./TECH_STACK.md).
 
 ## Prerequisites
 
-Before deploying, ensure you have:
+- Slack app configured (see [SETUP.md](./SETUP.md))
+- [Render](https://render.com) account
+- [Supabase](https://supabase.com) account (database)
+- [cron-job.org](https://cron-job.org) account (keep-alive & scheduling)
 
-- A Slack workspace with admin permissions
-- A hosting provider account (Railway, Render, AWS, etc.)
-- A database service (managed PostgreSQL recommended)
-- Domain name (optional, for custom OAuth redirects)
+## Architecture Overview
 
-## Deployment Options
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Render (Web Service)                                           │
+│  └─ Node.js + Fastify + Bolt                                    │
+│  └─ /health endpoint for keep-alive                             │
+└─────────────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Supabase (PostgreSQL)                                          │
+│  └─ teams, standups, reminders, users tables                    │
+└─────────────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  cron-job.org                                                   │
+│  └─ Ping /health every 14 min (keep server awake)               │
+│  └─ Trigger /api/check-reminders hourly                         │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Option 1: Railway (Recommended for Beginners)
+## Step 1: Set Up Supabase (Database)
 
-Railway provides the easiest deployment experience with automatic HTTPS and database provisioning.
+### Create Project
 
-#### Steps
+1. Go to [supabase.com](https://supabase.com)
+2. Create a new project
+3. Note down the connection string from **Settings → Database**
 
-1. **Create Railway Account**
-   - Sign up at [railway.app](https://railway.app)
-   - Connect your GitHub repository
+### Run Migrations
 
-2. **Set Up Database**
-   - Create a new PostgreSQL service in Railway
-   - Note the connection string
-
-3. **Configure Environment Variables**
-   ```
-   SLACK_BOT_TOKEN=xoxb-your-bot-token
-   SLACK_SIGNING_SECRET=your-signing-secret
-   SLACK_CLIENT_ID=your-client-id
-   SLACK_CLIENT_SECRET=your-client-secret
-   DATABASE_URL=postgresql://user:pass@host:port/db
-   NODE_ENV=production
-   PORT=3000
-   ```
-
-4. **Deploy**
-   - Railway will auto-detect your Node.js/Python app
-   - Push to main branch triggers deployment
-   - Check logs for any errors
-
-5. **Update Slack App Settings**
-   - Add Railway URL to Slack app's "Request URL"
-   - Format: `https://your-app.railway.app/slack/events`
-
-### Option 2: Render
-
-Similar to Railway but with different interface.
-
-#### Steps
-
-1. **Create Render Account**
-   - Sign up at [render.com](https://render.com)
-
-2. **Create Web Service**
-   - Connect GitHub repository
-   - Select your backend service (Node.js/Python)
-   - Add environment variables (same as Railway)
-
-3. **Create PostgreSQL Database**
-   - Add PostgreSQL service
-   - Use connection string in environment variables
-
-4. **Deploy**
-   - Render will build and deploy automatically
-   - Update Slack app with Render URL
-
-### Option 3: AWS (Advanced)
-
-For more control and scalability.
-
-#### Steps
-
-1. **Set Up AWS Resources**
-   - EC2 instance or Elastic Beanstalk
-   - RDS PostgreSQL database
-   - Application Load Balancer (optional)
-
-2. **Configure Security Groups**
-   - Allow HTTPS (443) inbound
-   - Allow database access from app server
-
-3. **Deploy Application**
-   - Use AWS CodeDeploy or manual deployment
-   - Set up environment variables via Systems Manager
-
-4. **Set Up SSL Certificate**
-   - Use AWS Certificate Manager
-   - Configure with Load Balancer or CloudFront
-
-## Slack App Configuration
-
-### Required Slack App Settings
-
-1. **OAuth & Permissions**
-   - Add redirect URLs: `https://your-app-domain.com/slack/oauth_redirect`
-   - Required scopes:
-     - `chat:write` - Send messages
-     - `chat:write.public` - Send messages to channels
-     - `commands` - Slash commands
-     - `users:read` - Read user information
-     - `channels:read` - Read channel information
-     - `groups:read` - Read private channel information
-
-2. **Event Subscriptions**
-   - Request URL: `https://your-app-domain.com/slack/events`
-   - Subscribe to bot events:
-     - `app_mention`
-     - `message.channels`
-     - `message.groups`
-
-3. **Interactivity & Shortcuts**
-   - Request URL: `https://your-app-domain.com/slack/interactive`
-   - Enable interactivity
-
-4. **Slash Commands**
-   - Create commands like `/standup` or `/sups`
-   - Request URL: `https://your-app-domain.com/slack/commands`
-
-## Environment Variables
-
-### Required Variables
+Before deploying, push your schema to Supabase:
 
 ```bash
-# Slack Configuration
+# In backend directory
+npx drizzle-kit push
+```
+
+## Step 2: Deploy to Render
+
+### Create Web Service
+
+1. Go to [render.com](https://render.com)
+2. Click **"New +"** → **"Web Service"**
+3. Connect your GitHub repository
+4. Configure:
+
+| Setting | Value |
+|---------|-------|
+| Name | `sups` |
+| Region | Choose closest to your users |
+| Branch | `main` |
+| Root Directory | `backend` |
+| Runtime | `Node` |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+
+### Set Environment Variables
+
+In Render dashboard, add these environment variables:
+
+```bash
+# Slack
 SLACK_BOT_TOKEN=xoxb-your-bot-token
 SLACK_SIGNING_SECRET=your-signing-secret
 SLACK_CLIENT_ID=your-client-id
 SLACK_CLIENT_SECRET=your-client-secret
 
-# Database
-DATABASE_URL=postgresql://user:password@host:port/database
+# Database (Supabase)
+DATABASE_URL=postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres
 
-# Application
+# App
 NODE_ENV=production
-PORT=3000
-
-# Optional: Custom configuration
-REMINDER_TIME=19:00  # 7 PM in 24-hour format
-TIMEZONE=America/New_York
+PORT=10000
 ```
 
-### Getting Slack Credentials
+### Deploy
 
-1. Go to [api.slack.com/apps](https://api.slack.com/apps)
-2. Select your app
-3. Navigate to "Basic Information"
-   - Copy "Client ID" and "Client Secret"
-   - Copy "Signing Secret"
-4. Navigate to "OAuth & Permissions"
-   - Copy "Bot User OAuth Token"
+Click **"Create Web Service"**. Render will build and deploy automatically.
 
-## Database Setup
+Note your app URL: `https://sups-xxxx.onrender.com`
 
-### Initial Migration
+## Step 3: Update Slack App URLs
 
-Run database migrations on first deployment:
+Go to [api.slack.com/apps](https://api.slack.com/apps) and update:
+
+| Setting | URL |
+|---------|-----|
+| Event Subscriptions → Request URL | `https://sups-xxxx.onrender.com/slack/events` |
+| OAuth → Redirect URL | `https://sups-xxxx.onrender.com/slack/oauth_redirect` |
+
+## Step 4: Set Up Keep-Alive (cron-job.org)
+
+Render's free tier sleeps after 15 minutes of inactivity. We use cron-job.org to keep it awake.
+
+### Create Keep-Alive Job
+
+1. Go to [cron-job.org](https://cron-job.org) and create an account
+2. Click **"Create cronjob"**
+3. Configure:
+
+| Setting | Value |
+|---------|-------|
+| Title | `SUPS Keep Alive` |
+| URL | `https://sups-xxxx.onrender.com/health` |
+| Schedule | Every 14 minutes |
+| Request Method | GET |
+
+### Create Reminder Trigger Job
+
+1. Create another cronjob:
+
+| Setting | Value |
+|---------|-------|
+| Title | `SUPS Check Reminders` |
+| URL | `https://sups-xxxx.onrender.com/api/check-reminders` |
+| Schedule | Every hour at minute 0 |
+| Request Method | POST |
+
+This triggers your reminder logic hourly.
+
+## Step 5: Verify Deployment
+
+### Health Check
 
 ```bash
-# For Node.js/Prisma
-npx prisma migrate deploy
-
-# For Python/Alembic
-alembic upgrade head
+curl https://sups-xxxx.onrender.com/health
+# Should return: {"status":"ok","timestamp":"..."}
 ```
 
-### Backup Strategy
+### Test Slack Integration
 
-- Set up automated daily backups
-- Test restore procedures
-- Keep backups for at least 30 days
+1. In Slack, DM your app: "test"
+2. @mention your app in a channel: `@SUPS status`
 
 ## Post-Deployment Checklist
 
-- [ ] App responds to Slack events
-- [ ] OAuth installation works
-- [ ] Reminders are scheduled correctly
-- [ ] Stand-up submissions are stored
-- [ ] Database connections are stable
-- [ ] Error logging is working
-- [ ] Monitoring is set up
+- [ ] Health endpoint responds
+- [ ] Slack events are received (check Render logs)
+- [ ] DMs to app work
+- [ ] @mentions work
+- [ ] cron-job.org jobs are running (check job history)
+- [ ] Database connection is stable
 
-## Monitoring & Maintenance
+## Monitoring
 
-### Recommended Tools
+### Render Logs
 
-- **Error Tracking**: Sentry or Rollbar
-- **Logging**: Logtail, Papertrail, or CloudWatch
-- **Uptime Monitoring**: UptimeRobot or Pingdom
-- **Analytics**: Slack API analytics dashboard
+View logs in Render dashboard → Your Service → **"Logs"**
 
-### Health Checks
+### cron-job.org History
 
-Set up a health check endpoint:
+Check job execution history to ensure keep-alive and reminders are running.
 
-```javascript
-// Example health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date() });
-});
-```
+### Recommended Additions
 
-Monitor this endpoint to ensure the app is running.
+| Tool | Purpose |
+|------|---------|
+| [UptimeRobot](https://uptimerobot.com) | Uptime monitoring (free) |
+| [Sentry](https://sentry.io) | Error tracking (free tier) |
 
 ## Troubleshooting
 
-### Common Issues
+### Slack Events Not Received
 
-1. **Slack Events Not Received**
-   - Verify Request URL is correct
-   - Check SSL certificate is valid
-   - Ensure signing secret matches
+- Check Render logs for errors
+- Verify Request URL in Slack app settings matches your Render URL
+- Ensure signing secret is correct
 
-2. **Database Connection Errors**
-   - Verify DATABASE_URL is correct
-   - Check database is accessible from hosting provider
-   - Ensure database is running
+### Server Sleeping (Cold Starts)
 
-3. **Reminders Not Sending**
-   - Check scheduler is running
-   - Verify bot has necessary permissions
-   - Check logs for errors
+- Verify cron-job.org keep-alive job is running every 14 minutes
+- Check job history for failures
 
-## Scaling Considerations
+### Database Connection Errors
 
-- Use connection pooling for database
-- Implement rate limiting
-- Cache frequently accessed data
-- Consider using Redis for job queue
-- Monitor resource usage
+- Verify `DATABASE_URL` in Render environment variables
+- Check Supabase project is active
+- Ensure connection pooling is enabled in Supabase
 
-## Security Best Practices
+### Reminders Not Sending
 
-- Never commit secrets to repository
-- Use environment variables for all sensitive data
-- Enable HTTPS only
-- Regularly update dependencies
-- Implement proper authentication
-- Rate limit API endpoints
+- Check cron-job.org reminder job is running
+- View Render logs around the scheduled time
+- Verify bot has permissions in the Slack channel
 
-## Rollback Procedure
+## Scaling (Future)
 
-1. Revert to previous deployment version
-2. Restore database from backup if needed
-3. Verify app functionality
-4. Investigate issues before redeploying
+When you outgrow the free tier:
+
+| Upgrade | When |
+|---------|------|
+| Render paid tier | Need always-on server, no cold starts |
+| Supabase Pro | Need more than 500MB database |
+| Redis (Upstash) | Need caching or job queues |
+
+## Security Checklist
+
+- [ ] Environment variables set (not hardcoded)
+- [ ] HTTPS enforced (Render does this automatically)
+- [ ] Slack signing secret verified on all requests
+- [ ] Database credentials not in code
+- [ ] `.env` files in `.gitignore`
+
+## Rollback
+
+If something goes wrong:
+
+1. In Render → Your Service → **"Deploys"**
+2. Find the last working deploy
+3. Click **"Redeploy"**
 
 ## Support
 
-For deployment issues, check:
-- Hosting provider documentation
-- Slack API status page
-- Application logs
-- GitHub Issues (if open source)
-
+- **Render Docs**: [render.com/docs](https://render.com/docs)
+- **Supabase Docs**: [supabase.com/docs](https://supabase.com/docs)
+- **Slack API Status**: [status.slack.com](https://status.slack.com)

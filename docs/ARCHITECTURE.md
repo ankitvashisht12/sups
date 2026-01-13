@@ -25,9 +25,8 @@ SUPS is a Slack app that automates stand-up reminders and organizes stand-up sub
 │         Slack App (Bolt/Fastify)      │
 │  ┌──────────────────────────────────┐  │
 │  │  Event Handlers                  │  │
-│  │  - app_mention                   │  │
-│  │  - message events                │  │
-│  │  - slash commands                │  │
+│  │  - app_mention (@SUPS commands)  │  │
+│  │  - message.im (DM submissions)   │  │
 │  │  - interactive components        │  │
 │  └──────────────────────────────────┘  │
 └──────┬─────────────────────────────────┘
@@ -180,44 +179,45 @@ users
 - Sends reminders via Slack API
 - Updates reminder status in database
 
-## Data Flow
+## User Flows
 
-### Stand-up Submission Flow
+For detailed user flows, commands, and interactions, see [PRODUCT.md](./PRODUCT.md).
+
+### Stand-up Submission Flow (Summary)
 
 ```
-User types /standup
+User DMs app throughout the day
     ↓
-Slack sends command to /slack/commands
+App acknowledges each message
     ↓
-Backend validates and processes
+App aggregates all messages
     ↓
-Opens modal/form for stand-up input
-    ↓
-User submits form
-    ↓
-Backend receives via /slack/interactive
+At deadline: App posts to #standup thread
     ↓
 Stand-up Service saves to database
-    ↓
-Backend sends confirmation to user
-    ↓
-Optionally: Post summary to channel
 ```
 
-### Reminder Flow
+### Reminder Flow (Summary)
 
 ```
-Scheduler runs (hourly)
+cron-job.org triggers /api/check-reminders (hourly)
     ↓
-Checks for reminders due in next hour
+Check for teams with reminder time in next hour
     ↓
 For each team:
-    - Get team configuration
-    - Get team members/channel
-    - Format reminder message
-    - Send via Slack API
+    - DM users who haven't submitted
+    - At deadline: post updates to channel
+    - Tag missing users
     ↓
 Update reminder status in database
+```
+
+### Daily Timeline
+
+```
+Reminder Time (e.g., 7 PM)  → DM users who haven't submitted
+Deadline (e.g., 8 PM)       → Post all updates to #standup thread
+End of Day (11:59 PM)       → Close day, mark missing as "missed"
 ```
 
 ## Design Decisions
@@ -262,10 +262,11 @@ See [TECH_STACK.md](./TECH_STACK.md) for technology choices and rationale.
 
 ## Future Enhancements
 
+See [VISION.md](./VISION.md) for the complete product roadmap, including:
+
+- AI-powered summaries and insights
+- Achievement and milestone detection
+- Performance review preparation
+- Knowledge graphs and team intelligence
 - Analytics dashboard
-- Stand-up templates
-- Integration with Jira/GitHub
-- Multi-channel support
-- Custom reminder messages
-- Stand-up analytics and insights
 
