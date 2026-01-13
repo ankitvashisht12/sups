@@ -1,9 +1,10 @@
-# SUPS - Stand-Up Integration for Slack
+# SUPS - Engineering Work Journal
 
-**SUPS** (Stand-Up) is a Slack integration app designed to streamline daily stand-up updates for engineering teams. It solves two critical problems teams face when managing stand-ups in Slack threads:
+**SUPS** (Stand-Up) is an engineering work journal and intelligence platform that starts with Slack stand-ups and grows into a comprehensive record of your professional journey.
 
-1. **Reminder Notifications**: Automatically reminds team members to post their stand-up updates by a specified deadline (e.g., 7 PM)
-2. **Thread Management**: Organizes stand-up updates in a clean, manageable format instead of letting threads grow indefinitely
+**Today**: Automated stand-up reminders and organized updates via Slack.
+
+**Tomorrow**: AI-powered summaries, achievement tracking, performance review prep, and career insights—all built from your daily stand-ups.
 
 ## Problem Statement
 
@@ -25,10 +26,11 @@ SUPS automates reminders and organizes stand-up data in a structured, easy-to-ac
 
 ### Future Enhancements
 
-- Analytics and insights on stand-up patterns
-- Integration with project management tools
-- Customizable stand-up templates
-- Team-specific configurations
+See [VISION.md](docs/VISION.md) for the full roadmap, including:
+- AI-powered weekly/monthly/yearly summaries
+- Achievement and milestone detection
+- Performance review preparation
+- Knowledge graphs and team intelligence
 
 ## Project Structure
 
@@ -56,6 +58,7 @@ sups/
 
 ## Documentation
 
+- [Vision](docs/VISION.md) - Product vision and long-term roadmap
 - [Tech Stack](docs/TECH_STACK.md) - Technology stack and dependencies
 - [Setup Guide](docs/SETUP.md) - Initial setup and configuration
 - [Deployment Guide](docs/DEPLOYMENT.md) - How to deploy the app
@@ -72,5 +75,5 @@ This project is open source and welcomes contributions! Please read our contribu
 
 ## Author
 
-Built with ❤️ for engineering teams who want better stand-up management.
+Built with ❤️ for engineers who want to own their professional story.
 
