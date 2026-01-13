@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="SUPS Logo" width="120" />
+</p>
+
 # SUPS - Engineering Work Journal
 
 **SUPS** (Stand-Ups) is an engineering work journal and intelligence platform that starts with Slack stand-ups and grows into a comprehensive record of your professional journey.
@@ -31,6 +35,20 @@ See [VISION.md](docs/VISION.md) for the full roadmap, including:
 - Achievement and milestone detection
 - Performance review preparation
 - Knowledge graphs and team intelligence
+
+## Screenshots
+
+<p align="center">
+  <img src="assets/demo-1.png" alt="Stand-up submission" width="600" />
+  <br />
+  <em>Stand-up submission via Slack</em>
+</p>
+
+<p align="center">
+  <img src="assets/demo-2.png" alt="Organized updates" width="600" />
+  <br />
+  <em>Organized stand-up updates</em>
+</p>
 
 ## Project Structure
 
