@@ -2,9 +2,9 @@
   <img src="assets/logo.png" alt="SUPS Logo" width="120" />
 </p>
 
-# SUPS - Engineering Work Journal
+# SUPS - Work Journal
 
-**SUPS** (Stand-Ups) is an engineering work journal and intelligence platform that starts with Slack stand-ups and grows into a comprehensive record of your professional journey.
+**SUPS** (Stand-Ups) is a work journal and intelligence platform that starts with Slack stand-ups and grows into a comprehensive record of your professional journey.
 
 **Today**: Automated stand-up reminders and organized updates via Slack.
 
@@ -12,7 +12,7 @@
 
 ## Problem Statement
 
-Many engineering teams use Slack threads for daily stand-ups, but this approach has limitations:
+Many teams use Slack threads for daily stand-ups, but this approach has limitations:
 
 - **Manual Reminders**: Someone has to manually remind the team to post updates by a certain time
 - **Unmanageable Threads**: Stand-up threads grow longer each day, making it difficult to find and review updates
@@ -94,5 +94,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Author
 
-Built with ❤️ for engineers who want to own their professional story.
+Built with ❤️ for teams who want to own their professional story.
 

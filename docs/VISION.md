@@ -1,10 +1,10 @@
 # Vision - SUPS
 
-SUPS is more than a Slack stand-up reminder—it's an **engineering work journal and intelligence platform**.
+SUPS is more than a Slack stand-up reminder—it's a **work journal and intelligence platform**.
 
 ## The Big Picture
 
-Daily stand-ups capture valuable data: what engineers work on, blockers they face, milestones they hit. Most teams let this data disappear into Slack threads. SUPS preserves and transforms it into actionable insights.
+Daily stand-ups capture valuable data: what team members work on, blockers they face, milestones they hit. Most teams let this data disappear into Slack threads. SUPS preserves and transforms it into actionable insights.
 
 ```
 Daily Stand-ups → Structured Data → AI Analysis → Insights & Growth
@@ -14,7 +14,7 @@ Daily Stand-ups → Structured Data → AI Analysis → Insights & Growth
 
 | For | Value |
 |-----|-------|
-| **Engineers** | Personal work journal, career narrative, achievement tracking |
+| **Individuals** | Personal work journal, career narrative, achievement tracking |
 | **Managers** | Team visibility without micromanagement, performance context |
 | **Teams** | Knowledge sharing, collaboration insights, project history |
 | **Organizations** | Workforce intelligence, skill mapping, resource planning |
@@ -140,7 +140,7 @@ Daily Stand-ups → Structured Data → AI Analysis → Insights & Growth
 
 ## Privacy & Trust Principles
 
-- **Transparency** - Engineers own their data and control visibility
+- **Transparency** - Users own their data and control visibility
 - **No Surveillance** - Insights for growth, not monitoring
 - **Aggregation Over Individual** - Team patterns, not individual tracking
 - **Opt-In Intelligence** - AI features are optional enhancements
@@ -149,6 +149,6 @@ Daily Stand-ups → Structured Data → AI Analysis → Insights & Growth
 
 ## Long-Term Vision
 
-SUPS becomes the **source of truth for engineering work**—a living journal that helps engineers grow, teams collaborate, and organizations understand their workforce. It transforms daily check-ins from administrative overhead into valuable career assets.
+SUPS becomes the **source of truth for team work**—a living journal that helps individuals grow, teams collaborate, and organizations understand their workforce. It transforms daily check-ins from administrative overhead into valuable career assets.
 
 > "Your stand-ups are your professional story. SUPS helps you tell it."
