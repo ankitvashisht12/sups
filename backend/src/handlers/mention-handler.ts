@@ -1,6 +1,13 @@
 import type { SlackEventMiddlewareArgs, AllMiddlewareArgs } from '@slack/bolt';
 import { getWorkspace } from '../services/workspace-service.js';
-import { getSubmissionStatus, getStandupsForDate } from '../services/standup-service.js';
+import {
+  getSubmissionStatus,
+  getStandupsForDate,
+  aggregateUserStandups,
+  markAsPosted,
+} from '../services/standup-service.js';
+import { getUsersWhoSubmitted } from '../services/reminder-service.js';
+import type { Workspace } from '../db/schema.js';
 
 type AppMentionEvent = SlackEventMiddlewareArgs<'app_mention'> & AllMiddlewareArgs;
 
@@ -35,6 +42,10 @@ export async function handleAppMention({
     await handleHelpCommand({ say });
   } else if (command.startsWith('config')) {
     await handleConfigCommand({ workspace, user, say });
+  } else if (command === 'demo reminder' || command === 'demo reminders') {
+    await handleDemoReminder({ workspace, client, say });
+  } else if (command === 'demo standup' || command === 'demo standups') {
+    await handleDemoStandups({ workspace, client, say });
   } else if (isCreatorQuestion(command)) {
     await handleCreatorCommand({ say });
   } else {
@@ -212,7 +223,7 @@ async function handleHelpCommand({ say }: HelpCommandContext): Promise<void> {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*Channel Commands:*\n• `@SUPS status` - Show submission status for today\n• `@SUPS help` - Show this help message\n• `@SUPS config` - Open configuration (admins only)',
+          text: '*Channel Commands:*\n• `@SUPS status` - Show submission status for today\n• `@SUPS help` - Show this help message\n• `@SUPS config` - Open configuration (admins only)\n• `@SUPS demo reminder` - 🧪 Test: Send reminders now\n• `@SUPS demo standups` - 🧪 Test: Post standups to channel now',
         },
       },
       {
@@ -245,6 +256,172 @@ async function handleConfigCommand({
   await say(
     'Configuration modal coming soon! For now, settings are configured during app installation.'
   );
+}
+
+interface DemoCommandContext {
+  workspace: Workspace;
+  client: AppMentionEvent['client'];
+  say: AppMentionEvent['say'];
+}
+
+/**
+ * Handle @SUPS demo reminder - triggers reminder flow for testing
+ */
+async function handleDemoReminder({
+  workspace,
+  client,
+  say,
+}: DemoCommandContext): Promise<void> {
+  if (!workspace.standupChannelId) {
+    await say('⚠️ No standup channel configured. Please set up the app first by clicking on SUPS in the sidebar.');
+    return;
+  }
+
+  await say('🧪 *Demo Mode:* Triggering reminder flow...');
+
+  const today = new Date().toISOString().split('T')[0]!;
+  const submitted = await getUsersWhoSubmitted(workspace.id, today);
+
+  // Get channel members
+  let members: string[] = [];
+  try {
+    const result = await client.conversations.members({
+      channel: workspace.standupChannelId,
+    });
+    members = result.members ?? [];
+  } catch (e) {
+    await say(`❌ Failed to get channel members: ${e}`);
+    return;
+  }
+
+  // Filter to humans who haven't submitted
+  const toRemind = members.filter((m) => m.startsWith('U') && !submitted.has(m));
+
+  if (toRemind.length === 0) {
+    await say('✅ Everyone has already submitted! No reminders needed.');
+    return;
+  }
+
+  // Send DM reminders
+  let sentCount = 0;
+  for (const userId of toRemind) {
+    try {
+      await client.chat.postMessage({
+        channel: userId,
+        text: "🧪 *[DEMO]* Hey! 👋 Time for your stand-up. Just reply here with what you worked on today! 📝",
+      });
+      sentCount++;
+    } catch (e) {
+      console.error(`Failed to send demo reminder to ${userId}:`, e);
+    }
+  }
+
+  await say(`✅ Demo reminders sent to ${sentCount} users: ${toRemind.map((u) => `<@${u}>`).join(', ')}`);
+}
+
+/**
+ * Handle @SUPS demo standups - triggers standup posting flow for testing
+ */
+async function handleDemoStandups({
+  workspace,
+  client,
+  say,
+}: DemoCommandContext): Promise<void> {
+  if (!workspace.standupChannelId) {
+    await say('⚠️ No standup channel configured. Please set up the app first by clicking on SUPS in the sidebar.');
+    return;
+  }
+
+  await say('🧪 *Demo Mode:* Posting standups to channel...');
+
+  const today = new Date().toISOString().split('T')[0]!;
+  const standups = await getStandupsForDate(workspace.id, today);
+
+  if (standups.length === 0) {
+    await say('📭 No standups submitted today. DM me with your update first, then try again!');
+    return;
+  }
+
+  // Create parent message
+  const parentResult = await client.chat.postMessage({
+    channel: workspace.standupChannelId,
+    text: `🧪 *[DEMO]* 📅 *Stand-ups for ${formatDate(today)}*`,
+  });
+
+  const threadTs = parentResult.ts;
+  if (!threadTs) {
+    await say('❌ Failed to create thread.');
+    return;
+  }
+
+  // Group standups by user
+  const userStandups = new Map<string, { userName?: string; isLate: boolean }>();
+  for (const standup of standups) {
+    if (!userStandups.has(standup.slackUserId)) {
+      userStandups.set(standup.slackUserId, {
+        userName: standup.userName ?? undefined,
+        isLate: standup.isLate ?? false,
+      });
+    }
+  }
+
+  // Post each user's aggregated standup
+  const standupIds: string[] = [];
+  for (const [userId, info] of userStandups) {
+    const aggregated = await aggregateUserStandups(workspace.id, userId, today);
+    const lateTag = info.isLate ? ' _(late)_' : '';
+
+    await client.chat.postMessage({
+      channel: workspace.standupChannelId,
+      thread_ts: threadTs,
+      text: `*<@${userId}>*${lateTag}:\n${aggregated}`,
+    });
+
+    const userStandupIds = standups
+      .filter((s) => s.slackUserId === userId)
+      .map((s) => s.id);
+    standupIds.push(...userStandupIds);
+  }
+
+  // Mark as posted
+  if (standupIds.length > 0) {
+    await markAsPosted(standupIds, threadTs);
+  }
+
+  // Tag missing users
+  try {
+    const membersResult = await client.conversations.members({
+      channel: workspace.standupChannelId,
+    });
+    const members = membersResult.members ?? [];
+    const submittedUsers = new Set(userStandups.keys());
+    const missing = members.filter((m) => m.startsWith('U') && !submittedUsers.has(m));
+
+    if (missing.length > 0) {
+      await client.chat.postMessage({
+        channel: workspace.standupChannelId,
+        thread_ts: threadTs,
+        text: `⏰ *Waiting on:* ${missing.map((m) => `<@${m}>`).join(', ')}`,
+      });
+    }
+  } catch {
+    // Continue without missing users tag
+  }
+
+  await say(`✅ Posted ${userStandups.size} standup(s) to <#${workspace.standupChannelId}>!`);
+}
+
+/**
+ * Format date for display
+ */
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 /**
