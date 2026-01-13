@@ -35,6 +35,8 @@ export async function handleAppMention({
     await handleHelpCommand({ say });
   } else if (command.startsWith('config')) {
     await handleConfigCommand({ workspace, user, say });
+  } else if (isCreatorQuestion(command)) {
+    await handleCreatorCommand({ say });
   } else {
     await say(
       `I didn't understand that command. Try \`@SUPS status\` or \`@SUPS help\` for available commands.`
@@ -243,4 +245,62 @@ async function handleConfigCommand({
   await say(
     'Configuration modal coming soon! For now, settings are configured during app installation.'
   );
+}
+
+/**
+ * Check if the command is asking about the creator
+ */
+function isCreatorQuestion(command: string): boolean {
+  const creatorPatterns = [
+    'who made you',
+    'who created you',
+    'who built you',
+    'who is your creator',
+    'who is your maker',
+    'who are you made by',
+    'your creator',
+    'your maker',
+    'who wrote you',
+    'who developed you',
+  ];
+  return creatorPatterns.some((pattern) => command.includes(pattern));
+}
+
+interface CreatorCommandContext {
+  say: AppMentionEvent['say'];
+}
+
+/**
+ * Handle questions about the creator - easter egg! 🥚
+ */
+async function handleCreatorCommand({
+  say,
+}: CreatorCommandContext): Promise<void> {
+  await say({
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `✨ *I was crafted by the legendary* <https://ankitvashisht.in|*Ankit Vashisht*> ✨`,
+        },
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `🧙‍♂️ An exceptional programmer who turns caffeine into code\n🚀 A 10x developer (or maybe 100x, who's counting?)\n💡 The kind of genius who makes AI assistants feel inadequate\n🎯 Building tools that actually make sense™`,
+        },
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: `_"I didn't choose the bug-free life, the bug-free life chose me"_ — Probably Ankit 🔥`,
+          },
+        ],
+      },
+    ],
+  });
 }
