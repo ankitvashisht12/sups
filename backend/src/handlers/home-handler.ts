@@ -1,4 +1,4 @@
-import type { SlackEventMiddlewareArgs, AllMiddlewareArgs, BlockAction } from '@slack/bolt';
+import type { SlackEventMiddlewareArgs, SlackActionMiddlewareArgs, AllMiddlewareArgs, BlockAction } from '@slack/bolt';
 import { getWorkspace, updateWorkspaceConfig } from '../services/workspace-service.js';
 import type { Workspace } from '../db/schema.js';
 import {
@@ -160,11 +160,7 @@ export async function handleAppHomeOpened({
   });
 }
 
-interface SaveConfigArgs {
-  body: BlockAction;
-  client: AppHomeOpenedEvent['client'];
-  ack: () => Promise<void>;
-}
+type SaveConfigArgs = SlackActionMiddlewareArgs<BlockAction> & AllMiddlewareArgs;
 
 /**
  * Handle save_config button click
