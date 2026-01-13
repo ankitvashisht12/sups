@@ -24,10 +24,7 @@ See the main [SETUP.md](../docs/SETUP.md) guide for installation and configurati
 
 ## Technology Stack
 
-- **Framework**: Express.js (Node.js) or FastAPI (Python)
-- **Slack SDK**: @slack/bolt (Node.js) or slack-sdk (Python)
-- **Database**: PostgreSQL with Prisma (Node.js) or SQLAlchemy (Python)
-- **Scheduler**: node-cron (Node.js) or APScheduler (Python)
+See [docs/TECH_STACK.md](../docs/TECH_STACK.md) for the complete technology stack.
 
 ## Development
 

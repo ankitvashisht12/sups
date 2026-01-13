@@ -22,7 +22,7 @@ SUPS is a Slack app that automates stand-up reminders and organizes stand-up sub
        │ Events, Commands, Interactions
        │
 ┌──────▼─────────────────────────────────┐
-│         Slack App (Bolt/Express)      │
+│         Slack App (Bolt/Fastify)      │
 │  ┌──────────────────────────────────┐  │
 │  │  Event Handlers                  │  │
 │  │  - app_mention                   │  │
@@ -74,11 +74,13 @@ SUPS is a Slack app that automates stand-up reminders and organizes stand-up sub
 └─────────────────────────────────────────┘
 ```
 
+## Tech Stack
+
+See [TECH_STACK.md](./TECH_STACK.md) for the complete technology stack.
+
 ## Components
 
 ### 1. Slack App Layer
-
-**Technology**: Slack Bolt Framework (Node.js) or slack-sdk (Python)
 
 **Responsibilities**:
 - Receive and verify Slack events
@@ -94,8 +96,6 @@ SUPS is a Slack app that automates stand-up reminders and organizes stand-up sub
 - `/slack/oauth_redirect` - OAuth callback
 
 ### 2. Backend Services
-
-**Technology**: Express.js (Node.js) or FastAPI (Python)
 
 **Services**:
 
@@ -168,8 +168,6 @@ users
 
 ### 4. Scheduler
 
-**Technology**: node-cron (Node.js) or APScheduler (Python)
-
 **Responsibilities**:
 - Run daily jobs to check for reminders
 - Send reminder messages at configured times
@@ -177,7 +175,7 @@ users
 - Retry failed reminders
 
 **Implementation**:
-- Cron job runs every hour
+- External cron service triggers `/api/check-reminders` endpoint hourly
 - Checks for teams with reminders scheduled in the next hour
 - Sends reminders via Slack API
 - Updates reminder status in database
@@ -224,27 +222,7 @@ Update reminder status in database
 
 ## Design Decisions
 
-### Why PostgreSQL?
-
-- Relational data fits well (teams, standups, reminders)
-- ACID compliance for data integrity
-- Good performance for queries
-- Easy to scale
-
-### Why Slack Bolt Framework?
-
-- Official Slack framework
-- Handles verification automatically
-- Built-in middleware support
-- Excellent documentation
-- Active community
-
-### Why Cron-based Scheduler?
-
-- Simple to implement
-- No additional infrastructure needed
-- Sufficient for MVP
-- Can upgrade to job queue later if needed
+See [TECH_STACK.md](./TECH_STACK.md) for technology choices and rationale.
 
 ## Security Considerations
 

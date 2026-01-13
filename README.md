@@ -56,6 +56,7 @@ sups/
 
 ## Documentation
 
+- [Tech Stack](docs/TECH_STACK.md) - Technology stack and dependencies
 - [Setup Guide](docs/SETUP.md) - Initial setup and configuration
 - [Deployment Guide](docs/DEPLOYMENT.md) - How to deploy the app
 - [Development Plan](docs/DEVELOPMENT_PLAN.md) - Roadmap and development phases

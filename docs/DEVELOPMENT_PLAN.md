@@ -17,7 +17,7 @@ SUPS will be built in phases, starting with a minimal viable product (MVP) that 
 
 #### Week 1: Foundation
 - [ ] **Day 1-2: Project Setup**
-  - Initialize backend project (Node.js/Express or Python/FastAPI)
+  - Initialize backend project (see [TECH_STACK.md](./TECH_STACK.md))
   - Set up Slack app in Slack API dashboard
   - Configure OAuth and bot tokens
   - Set up development environment
@@ -29,7 +29,7 @@ SUPS will be built in phases, starting with a minimal viable product (MVP) that 
   - Test basic Slack interactions
 
 - [ ] **Day 5: Database Setup**
-  - Choose database (PostgreSQL/MySQL or MongoDB)
+  - Set up database (see [TECH_STACK.md](./TECH_STACK.md))
   - Design schema for:
     - Teams/workspaces
     - Stand-up schedules
@@ -84,34 +84,9 @@ SUPS will be built in phases, starting with a minimal viable product (MVP) that 
 - [ ] CI/CD pipeline
 - [ ] Deployment to production
 
-## Technology Stack Recommendations
+## Technology Stack
 
-### Backend Options
-
-**Option 1: Node.js**
-- **Framework**: Express.js or Fastify
-- **Slack SDK**: `@slack/bolt` (official Slack framework)
-- **Database**: PostgreSQL with Prisma ORM
-- **Scheduler**: `node-cron` or Bull (Redis-based)
-- **Hosting**: Railway, Render, or AWS
-
-**Option 2: Python**
-- **Framework**: FastAPI or Flask
-- **Slack SDK**: `slack-sdk` (official)
-- **Database**: PostgreSQL with SQLAlchemy
-- **Scheduler**: APScheduler or Celery
-- **Hosting**: Railway, Render, or Heroku
-
-### Recommended: Node.js with Bolt Framework
-
-The Slack Bolt framework provides excellent tooling and is well-documented, making it ideal for first-time Slack app developers.
-
-## Key Decisions Needed
-
-1. **Database**: PostgreSQL (recommended) vs MongoDB
-2. **Hosting**: Railway (easiest) vs AWS vs Render
-3. **Authentication**: Slack OAuth vs Bot tokens
-4. **Reminder Method**: Cron jobs vs Slack scheduled messages API
+See [TECH_STACK.md](./TECH_STACK.md) for the complete technology stack and rationale.
 
 ## Milestones
 
@@ -124,7 +99,7 @@ The Slack Bolt framework provides excellent tooling and is well-documented, maki
 ## Next Steps
 
 1. Review this plan
-2. Choose technology stack
+2. Review [TECH_STACK.md](./TECH_STACK.md)
 3. Set up development environment
 4. Start with Day 1 tasks
 
