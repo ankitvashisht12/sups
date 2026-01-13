@@ -153,9 +153,10 @@ export async function handleAppHomeOpened({
 
   const view = buildHomeView(workspace, userTimezone);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await client.views.publish({
     user_id: event.user,
-    view,
+    view: view as any,
   });
 }
 
@@ -211,9 +212,10 @@ export async function handleSaveConfig({
 
   // Refresh the home view
   const view = buildHomeView(updatedWorkspace);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await client.views.publish({
     user_id: userId,
-    view,
+    view: view as any,
   });
 }
 
